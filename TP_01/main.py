@@ -1,99 +1,78 @@
-from utils import *
-
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Trabalho de Computação Gráfica")
+from customtkinter import *
+from PIL import Image, ImageTk
 
 
-def init_grid(rows, cols, color):
-    grid = []
 
-    for i in range(rows):
-        grid.append([])
-        for _ in range(cols):
-            grid[i].append(color)
+class App(CTk):
+    def __init__(self):
+        super().__init__()
 
-    return grid
+        ## Title Bar
+        self.title("TP 01 - Paint")
+        self.BASE_DIR = os.path.dirname(__file__)
+        icon_path = os.path.join(self.BASE_DIR, "images", "icon.ico")
+        self.iconbitmap(icon_path)
 
-def draw_grid(win, grid):
-    for i, row in enumerate(grid):
-        for j, pixel in enumerate(row):
-            pygame.draw.rect(win, pixel, (j * PIXEL_SIZE, 
-                                          i * PIXEL_SIZE, 
-                                          PIXEL_SIZE, PIXEL_SIZE))
-    
-    # Definições da TOOLBAR
-    pygame.draw.line(win, BLACK, (0, (ROWS) * PIXEL_SIZE), 
-                     (WIDTH, (ROWS) * PIXEL_SIZE))
-    
+        # Setup window
+        self.window()
 
-    if DRAW_GRID_LINES:        
-        for i in range(ROWS + 1):
-            pygame.draw.line(win, BLACK, (0, i * PIXEL_SIZE),
-                             (WIDTH, i * PIXEL_SIZE))
+    def window(self):
+        self.configure(fg_color="green")
 
-        for j in range(COLS + 1):
-            pygame.draw.line(win, BLACK, (j * PIXEL_SIZE, 0),
-                             (j * PIXEL_SIZE, HEIGHT - TOOLBAR_HEIGHT))
-            
-def draw(win, grid, buttons):
-    win.fill(BG_COLOR)
-    draw_grid(win, grid)
+        window_width = 800
+        window_height = 600
+        display_width = self.winfo_screenwidth()
+        display_height = self.winfo_screenheight()
 
-    for button in buttons:
-        button.draw(win)
+        left = int(display_width / 2 - window_width / 2)
+        top = int(display_height / 2 - window_height / 2)
 
-    pygame.display.update()
+        self.geometry(f'{window_width}x{window_height}+{left}+{top}')
 
-def get_row_col(pos):
-    x,  y = pos
-    row = y // PIXEL_SIZE
-    col = x // PIXEL_SIZE
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
-    if row >= ROWS:
-        raise IndexError
-    
-    return row, col
+        self.head_config()
+        self.draw_config()
+        
+    def on_click(self):
+        print("Botao clicado!")
 
-run = True
-clock = pygame.time.Clock()
-grid = init_grid(ROWS, COLS, BG_COLOR)
-drawing_color = BLACK
+    def head_config(self):
+        head_color = 'red'
+        self.head_frame = CTkFrame(self, corner_radius=0, fg_color=head_color)
+        self.head_frame.grid(row=0, column=0, sticky="ew", padx=0, pady=0)
+        ##self.head_frame.columnconfigure(0, weight=0)
+        self.head_frame.configure(height=80)
 
-button_y = HEIGHT - TOOLBAR_HEIGHT/2 - 25
-buttons = [
-    Button(10, button_y, 50, 50, BLACK),
-    Button(80, button_y - 15, 80, 35, BG_COLOR, "Erase", BLACK),
-    Button(80, button_y + 30, 80, 35, WHITE, "Clear", BLACK),
-    Button(180, button_y + 30, 80, 35, WHITE, "Grid", BLACK)
-]
+        pencil_image = CTkImage(
+            light_image=Image.open(os.path.join(self.BASE_DIR, "images", "002-pencil.png")),
+            dark_image=Image.open(os.path.join(self.BASE_DIR, "images", "002-pencil.png")),
+            size=(40, 40)
+        )
 
+        self.btn_pencil = CTkButton( self.head_frame, image=pencil_image, text="",
+                                     fg_color=head_color, hover_color=head_color, width=40, height=40, cursor='hand2',
+                                     command=self.on_click()
+        )
+        self.btn_pencil.grid(row=0, column=0, padx=10, pady=10)
 
-while run:
-    clock.tick(FPS)
+        self.btn_color = CTkButton(self.head_frame, text='', corner_radius=100, width=40, height=40, cursor='hand2')
+        self.btn_color.grid(row=0, column=1, padx=10, pady=10)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
+        self.scale_size = CTkSlider(self.head_frame, from_=1, to=100)
+        self.scale_size.grid(row=0, column=2, padx=10, pady=10)
 
-        if pygame.mouse.get_pressed()[0]:
-            pos = pygame.mouse.get_pos()
-            
-            try:
-                row, col = get_row_col(pos)
-                grid[row][col] = drawing_color
-            except IndexError:
-                for button in buttons:
-                    if not button.clicked(pos):
-                        continue
-                    if button.text == "Clear":
-                        grid = init_grid(ROWS, COLS, BG_COLOR)
-                        drawing_color = BLACK
-                    elif button.text =="Grid":
-                        DRAW_GRID_LINES = not DRAW_GRID_LINES
+    def draw_config(self):
+        self.draw_frame = CTkFrame(self, corner_radius=0, fg_color="blue")
+        self.draw_frame.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
+        self.draw_frame.columnconfigure(0, weight=1)
+        self.draw_frame.rowconfigure(0, weight=1)
 
-                    drawing_color = button.color
-                    break
+        self.draw_area = CTkFrame(self.draw_frame, fg_color="white")
+        self.draw_area.grid(row=0, column=0, padx=70, pady=70, sticky="nsew")
+        
 
-    draw(WIN, grid, buttons)
-
-pygame.quit()
+app = App()
+app.mainloop()

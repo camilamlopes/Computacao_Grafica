@@ -2,7 +2,7 @@ from random import choice
 from customtkinter import *
 from PIL import Image, ImageTk
 
-from utils import *
+from utils import paint_area, algorithms
 
 class App(CTk):
     DEFAULT_PEN_SIZE = 5.0
@@ -26,6 +26,7 @@ class App(CTk):
         self.active_btn = None
         #self.line_width = self.choose_size_button.get()
         self.color = self.DEFAULT_COLOR
+        self.grid_on = False
 
     def window(self):
         #self.configure(fg_color="green")
@@ -66,6 +67,11 @@ class App(CTk):
         btn.configure(fg_color="#001B4B", hover_color="#02457A")
         self.active_btn = btn
         
+    def deactivate_button(self):
+        if self.active_btn is not None:
+            self.active_btn.configure(fg_color="#393954")
+        self.active_btn = None
+    
     def side_bar(self):
         self.side_frame = CTkFrame(self, corner_radius=20, fg_color='#242442')
         self.side_frame.grid(row=0, column=0, sticky="nswe", padx=10, pady=(0,10))
@@ -152,11 +158,7 @@ class App(CTk):
         self.shapes_area()
 
     def paint_area(self):
-        self.paint_frame = CTkFrame(self.main_content, corner_radius=20)
-        self.paint_frame.grid(row=0, column=0, sticky="nswe", padx=10, pady=10)
-
-        self.canvas = CTkCanvas(self.paint_frame, bg="white", highlightthickness=0)
-        self.canvas.pack(expand=True, fill="both", padx=0, pady=0)
+        self.paint = paint_area.PaintArea(self.main_content, width=600, height=600, pixel_size=5, bg="white")
 
     def shapes_area(self):
         self.shapes_frame = CTkFrame(self.main_content, corner_radius=20, fg_color='#242442')
@@ -206,8 +208,29 @@ class App(CTk):
         ## Canvas
         self.tabview.add("Canvas")
 
+        self.btn_grid = CTkButton(self.tabview.tab("Canvas"), text="Grid",
+                                  fg_color="#393954", hover_color="#5F5F86",
+                                  command=self.toggle_grid)
+        self.btn_grid.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
+        
+
+        
+        
         ## Transformadas Geométricas
         self.tabview.add("Transformadas")
+
+    def toggle_grid(self):
+        if self.grid_on:
+            self.grid_on = False
+            self.btn_choice("Grid Off")
+            self.deactivate_button()
+            self.paint.clear()
+        else:
+            self.grid_on = True
+            self.btn_choice("Grid On")
+            self.activate_button(self.btn_grid)
+            self.paint.draw_grid()
+            
 
 if __name__ == "__main__":
     app = App()
